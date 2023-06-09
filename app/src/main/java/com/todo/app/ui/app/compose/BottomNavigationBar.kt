@@ -22,7 +22,6 @@ fun BottomNavigationBar(navController: NavController) {
     )
 
     BottomNavigation(
-        elevation = 20.dp,
         backgroundColor = Primary
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()

@@ -4,6 +4,7 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Context
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -19,23 +20,31 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.todo.app.data.model.TaskCreateReqModel
+import com.todo.app.data.repository.TodoRepository
+import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
 @RequiresApi(Build.VERSION_CODES.O)
- fun showDatePicker(context: Context, selectedDate: MutableState<LocalDate>) {
+fun showDatePicker(
+    context: Context, selectedDate: MutableState<LocalDate>, onDateSelected: () -> Unit = {},
+) {
     val datePicker = DatePickerDialog(
         context,
         { _, year, month, dayOfMonth ->
             selectedDate.value = LocalDate.of(year, month + 1, dayOfMonth)
+            onDateSelected()
         },
         selectedDate.value.year, selectedDate.value.monthValue - 1, selectedDate.value.dayOfMonth,
     )
@@ -55,16 +64,22 @@ private fun showTimePicker(context: Context, selectedTime: MutableState<LocalTim
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun BottomSheetContent(focusRequester: FocusRequester) {
+fun BottomSheetContent(focusRequester: FocusRequester, closeModal: () -> Unit) {
+    val repository = TodoRepository()
     val task = remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
+
     val selectedDate = remember { mutableStateOf(LocalDate.now()) }
     val selectedTime = remember { mutableStateOf(LocalTime.now()) }
+    val selectedDateTime = LocalDateTime.of(selectedDate.value, selectedTime.value)
 
     val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     val timeFormatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
     val formattedTime = selectedTime.value.format(timeFormatter)
     val formattedDate = selectedDate.value.format(dateFormatter)
+    val formattedDateTime = selectedDateTime.format(formatter)
 
     val localContext = LocalContext.current
 
@@ -72,7 +87,23 @@ fun BottomSheetContent(focusRequester: FocusRequester) {
 
     val onClicked: () -> Unit = {
         isLoading.value = true
-
+        val body = TaskCreateReqModel(
+            description = task.value, date = formattedDateTime,
+        )
+        coroutineScope.launch {
+            repository.createTask(
+                body = body, context = localContext,
+                onSuccess = {
+                    isLoading.value = false
+                    closeModal()
+                },
+                onFailure = {
+                    isLoading.value = false
+                    Toast.makeText(localContext, it, Toast.LENGTH_SHORT).show()
+                    closeModal()
+                },
+            )
+        }
     }
 
     Column(

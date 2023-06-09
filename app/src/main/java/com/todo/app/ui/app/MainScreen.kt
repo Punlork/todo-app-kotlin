@@ -3,7 +3,6 @@ package com.todo.app.ui.app
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,7 +15,6 @@ import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Scaffold
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -45,6 +43,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun MainScreen(navigateToLogin: () -> Unit) {
+
     val navController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
     val bottomSheetState =
@@ -55,7 +54,17 @@ fun MainScreen(navigateToLogin: () -> Unit) {
     if (bottomSheetState.currentValue == ModalBottomSheetValue.Hidden) keyboardController?.hide() else keyboardController?.show()
 
     ModalBottomSheetLayout(
-        sheetContent = { BottomSheetContent(focusRequester) },
+        sheetContent = {
+            BottomSheetContent(
+                focusRequester,
+                closeModal = {
+                    navController.navigate(BottomNavItem.Home.screenRoute)
+                    coroutineScope.launch {
+                        bottomSheetState.hide()
+                    }
+                },
+            )
+        },
         sheetShape = RoundedCornerShape(
             topStart = 20.dp, topEnd = 20.dp,
         ),
@@ -64,10 +73,8 @@ fun MainScreen(navigateToLogin: () -> Unit) {
         Scaffold(
             bottomBar = {
                 BottomAppBar(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(15.dp, 15.dp, 0.dp, 0.dp)),
+                    modifier = Modifier.clip(RoundedCornerShape(15.dp, 15.dp, 0.dp, 0.dp)),
                     cutoutShape = CircleShape,
-                    elevation = 22.dp,
                     backgroundColor = Primary
                 ) {
                     BottomNavigationBar(navController)

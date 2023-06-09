@@ -19,6 +19,8 @@ data class Tasks(
     @SerializedName("_id") var Id: String? = null,
     @SerializedName("description") var description: String? = null,
     @SerializedName("completed") var completed: Boolean? = null,
-    @SerializedName("owner") var owner: String? = null
+    @SerializedName("date") var date: String? = null,
+    @SerializedName("owner") var owner: String? = null,
+    @SerializedName("__v") var v: String? = null
 
 )
