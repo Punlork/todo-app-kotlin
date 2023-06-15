@@ -24,7 +24,6 @@ sealed class AppScreen(val screenRoute: String) {
     object Signup : AppScreen("Signup")
 }
 
-
 sealed class BottomNavItem(val title: String, var icon: Int, var screenRoute: String) {
     object Home : BottomNavItem("Home", R.drawable.baseline_home_24, "home")
     object Setting : BottomNavItem("Setting", R.drawable.baseline_settings_24, "setting")

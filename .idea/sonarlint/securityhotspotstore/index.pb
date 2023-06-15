@@ -24,10 +24,6 @@ g
 7app/src/main/java/com/todo/app/helper/ErrorConverter.kt,6/d/6dc09c8eefbb0ef9e3b5af9fac809910aa1a8ef5
 _
 /app/src/main/java/com/todo/app/ui/theme/Type.kt,8/6/8694b23c36cdf44ef947189637d2402e080f6574
-Y
-)app/src/main/java/com/todo/app/TodoApp.kt,0/3/03ae6fb48a9d4d3bbee19f0e80e086a5b6c9d28b
-^
-.app/src/main/java/com/todo/app/MainActivity.kt,f/d/fde61a5864b4390bdb0b6352930c9a92f48a3e41
 `
 0app/src/main/java/com/todo/app/ui/theme/Theme.kt,5/4/541456ef6d423c48573d77276ea324c2b434dcac
 `

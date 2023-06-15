@@ -22,13 +22,9 @@ e
 5app/src/main/java/com/todo/app/data/model/ErrorRes.kt,0/f/0fe48327c9c13e3dd7edfcc40e01f9ae249909a5
 g
 7app/src/main/java/com/todo/app/helper/ErrorConverter.kt,6/d/6dc09c8eefbb0ef9e3b5af9fac809910aa1a8ef5
-Y
-)app/src/main/java/com/todo/app/TodoApp.kt,0/3/03ae6fb48a9d4d3bbee19f0e80e086a5b6c9d28b
 _
 /app/src/main/java/com/todo/app/ui/theme/Type.kt,8/6/8694b23c36cdf44ef947189637d2402e080f6574
 `
 0app/src/main/java/com/todo/app/ui/theme/Theme.kt,5/4/541456ef6d423c48573d77276ea324c2b434dcac
 `
 0app/src/main/java/com/todo/app/ui/theme/Color.kt,c/d/cd7341380571ff8a1c978b6c764c3a5ad457cb7d
-^
-.app/src/main/java/com/todo/app/MainActivity.kt,f/d/fde61a5864b4390bdb0b6352930c9a92f48a3e41

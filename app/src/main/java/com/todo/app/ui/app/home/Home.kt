@@ -25,7 +25,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,9 +41,9 @@ import com.todo.app.R
 import com.todo.app.data.model.TaskUpdateReqModel
 import com.todo.app.data.model.Tasks
 import com.todo.app.data.repository.TodoRepository
-import com.todo.app.helper.classFormatter
 import com.todo.app.ui.app.compose.showDatePicker
 import com.todo.app.ui.compose.Loading
+import com.todo.app.ui.theme.Primary
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -74,11 +73,10 @@ fun HomeScreen() {
                 },
                 onFailure = {
                     isLoading.value = false
-                    Toast.makeText(localContext, it, Toast.LENGTH_LONG).show()
+                    Toast.makeText(localContext, it, Toast.LENGTH_SHORT).show()
                 },
             )
         }
-
     }
 
     LaunchedEffect(formattedDate.value) {
@@ -113,8 +111,14 @@ fun HomeScreen() {
                 modifier = Modifier
                     .size(50.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary)
-            )
+                    .background(Primary)
+                    .padding(5.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.app_logo),
+                    contentDescription = "logo"
+                )
+            }
         }
         Divider(Modifier.padding(vertical = 20.dp))
         Column(modifier = Modifier.padding(horizontal = 20.dp)) {
@@ -141,7 +145,6 @@ fun HomeScreen() {
                         showDatePicker(localContext, selectedDate) {
                             isLoading.value = true
                             tasks.clear()
-//                            getTasks()
                         }
                     },
                     style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
@@ -155,7 +158,6 @@ fun HomeScreen() {
                         selectedDate.value = selectedDate.value.plusDays(1)
                         isLoading.value = true
                         tasks.clear()
-//                        getTasks()
                     },
                 )
             }
