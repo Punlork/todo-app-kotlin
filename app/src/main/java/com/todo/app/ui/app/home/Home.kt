@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -25,10 +26,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +45,7 @@ import com.todo.app.data.repository.TodoRepository
 import com.todo.app.ui.app.compose.showDatePicker
 import com.todo.app.ui.compose.Loading
 import com.todo.app.ui.theme.Primary
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -51,43 +53,34 @@ import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun HomeScreen() {
-    val repository = TodoRepository()
+fun HomeScreen(
+    tasks: SnapshotStateList<Tasks>,
+    getTasks: (date: String) -> Unit,
+    updateTasks: (it: String, body: TaskUpdateReqModel) -> Unit,
+) {
+
     val localContext = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
     val selectedDate = remember { mutableStateOf(LocalDate.now()) }
     val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     val formattedDate = remember { mutableStateOf("") }
-    val tasks = remember { mutableStateListOf<Tasks>() }
     val isLoading = remember { mutableStateOf(true) }
+    val coroutineScope = rememberCoroutineScope()
+
     formattedDate.value = selectedDate.value.format(dateFormatter)
 
-    val getTasks: () -> Unit = {
+    LaunchedEffect(formattedDate.value) {
         coroutineScope.launch {
-            repository.getTasks(
-                context = localContext,
-                date = formattedDate.value,
-                onSuccess = {
-                    tasks.addAll(it?.tasks.orEmpty())
-                    isLoading.value = false
-                },
-                onFailure = {
-                    isLoading.value = false
-                    Toast.makeText(localContext, it, Toast.LENGTH_SHORT).show()
-                },
-            )
+            getTasks(formattedDate.value)
+            isLoading.value = false
         }
     }
 
-    LaunchedEffect(formattedDate.value) {
-        getTasks()
-    }
-
     Column(
-        modifier = Modifier
+        modifier = Modifierœ
             .fillMaxSize()
             .padding(vertical = 10.dp)
     ) {
+        Spacer(Modifier.weight(1f))
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
@@ -115,8 +108,7 @@ fun HomeScreen() {
                     .padding(5.dp)
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.app_logo),
-                    contentDescription = "logo"
+                    painter = painterResource(id = R.drawable.app_logo), contentDescription = "logo"
                 )
             }
         }
@@ -136,7 +128,6 @@ fun HomeScreen() {
                         selectedDate.value = selectedDate.value.minusDays(1)
                         isLoading.value = true
                         tasks.clear()
-//                        getTasks()
                     },
                 )
                 Text(
@@ -197,26 +188,7 @@ fun HomeScreen() {
                                 onCheckedChange = {
                                     val body = TaskUpdateReqModel(true)
                                     tasks[index] = item.copy(completed = it)
-                                    coroutineScope.launch {
-                                        repository.updateTask(
-                                            context = localContext,
-                                            onSuccess = { result ->
-                                                Toast.makeText(
-                                                    localContext,
-                                                    result?.message,
-                                                    Toast.LENGTH_SHORT,
-                                                ).show()
-                                            },
-                                            onFailure = { message ->
-                                                Toast.makeText(
-                                                    localContext, message, Toast.LENGTH_SHORT
-                                                ).show()
-                                            },
-                                            id = item.Id!!,
-                                            body = body
-                                        )
-                                    }
-
+                                    item.Id?.let { id -> updateTasks(id, body) }
                                 },
                                 modifier = Modifier.size(20.dp),
                                 colors = CheckboxDefaults.colors(

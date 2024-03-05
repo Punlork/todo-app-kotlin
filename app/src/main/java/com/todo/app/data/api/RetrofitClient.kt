@@ -31,7 +31,6 @@ object RetrofitClient {
 
     fun initialize(context: Context): ApiService {
         this.token = getToken(context)
-        // Use the context as needed
         return apiService;
     }
 

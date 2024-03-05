@@ -5,12 +5,18 @@ import android.app.TimePickerDialog
 import android.content.Context
 import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -26,6 +32,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.todo.app.data.model.TaskCreateReqModel
 import com.todo.app.data.repository.TodoRepository
@@ -62,6 +69,7 @@ private fun showTimePicker(context: Context, selectedTime: MutableState<LocalTim
 }
 
 
+@OptIn(ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BottomSheetContent(focusRequester: FocusRequester, closeModal: () -> Unit) {
@@ -82,7 +90,6 @@ fun BottomSheetContent(focusRequester: FocusRequester, closeModal: () -> Unit) {
     val formattedDateTime = selectedDateTime.format(formatter)
 
     val localContext = LocalContext.current
-
     val isLoading = remember { mutableStateOf(false) }
 
     val onClicked: () -> Unit = {
@@ -93,17 +100,15 @@ fun BottomSheetContent(focusRequester: FocusRequester, closeModal: () -> Unit) {
         coroutineScope.launch {
             repository.createTask(
                 body = body, context = localContext,
-                onSuccess = {
-                    isLoading.value = false
-                    closeModal()
-                },
+                onSuccess = {},
                 onFailure = {
-                    isLoading.value = false
                     Toast.makeText(localContext, it, Toast.LENGTH_SHORT).show()
-                    closeModal()
                 },
             )
         }
+        task.value = ""
+        isLoading.value = false
+        closeModal()
     }
 
     Column(
@@ -146,6 +151,12 @@ fun BottomSheetContent(focusRequester: FocusRequester, closeModal: () -> Unit) {
             onValueChange = {
                 task.value = it
             },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    if (task.value.isNotBlank()) onClicked()
+                },
+            ),
             trailingIcon = {
                 if (isLoading.value) CircularProgressIndicator(modifier = Modifier.size(15.dp)) else Text(
                     "Send",
@@ -159,7 +170,7 @@ fun BottomSheetContent(focusRequester: FocusRequester, closeModal: () -> Unit) {
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .focusRequester(focusRequester),
+                .focusRequester(focusRequester)
         )
     }
 }

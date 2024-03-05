@@ -16,7 +16,8 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-interface ApiService {
+interface
+ApiService {
 
     @GET("users/logout")
     suspend fun logout(): Response<LogoutResModel>

@@ -29,7 +29,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.NavOptions
 import com.todo.app.data.model.LoginReqModel
+import com.todo.app.data.repository.AuthRepository
 import com.todo.app.data.repository.TodoRepository
 import com.todo.app.ui.compose.Loading
 import kotlinx.coroutines.launch
@@ -39,7 +41,7 @@ import kotlinx.coroutines.launch
 fun LoginScreen(
     navController: NavController
 ) {
-    val repository: TodoRepository = TodoRepository()
+    val repository = AuthRepository()
     val username = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
     val isLoading = remember { mutableStateOf(false) }
@@ -59,12 +61,17 @@ fun LoginScreen(
                     isLoading.value = false
                 },
                 onSuccess = { result ->
+                    println(result)
                     sharedPref.edit().putString("token", result?.token).apply()
-                    navController.navigate("MainApp")
+                    navController.navigate("MainApp"){
+                        popUpTo(0)
+                    }
                     isLoading.value = false
                 },
             )
         }
+        username.value = "";
+        password.value = "";
     }
 
     if (isLoading.value) {

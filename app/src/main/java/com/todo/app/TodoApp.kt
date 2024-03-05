@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.todo.app.data.repository.AuthRepository
 import com.todo.app.data.repository.TodoRepository
 import com.todo.app.ui.app.MainScreen
 import com.todo.app.ui.auth.LoginScreen
@@ -35,10 +36,10 @@ fun TodoApp() {
     val navController = rememberNavController()
     val localContext = LocalContext.current
     val sharedPref = localContext.getSharedPreferences("my_preference", Context.MODE_PRIVATE)
-    val token = sharedPref.getString("token", "")
-    val mainDestination: String = if (token === "") "Login" else "MainApp"
+    val token = sharedPref.getString("token", "") ?: "";
+    val mainDestination: String = if (token.isBlank()) "Login" else "MainApp"
     val coroutineScope = rememberCoroutineScope()
-    val repository = TodoRepository()
+    val repository = AuthRepository()
     val isLoading = remember { mutableStateOf(false) }
 
     if (isLoading.value) Loading()
