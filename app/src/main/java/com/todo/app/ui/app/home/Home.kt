@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,7 +18,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Divider
@@ -26,8 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
@@ -37,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.todo.app.R
 import com.todo.app.data.model.TaskUpdateReqModel
@@ -45,36 +48,22 @@ import com.todo.app.data.repository.TodoRepository
 import com.todo.app.ui.app.compose.showDatePicker
 import com.todo.app.ui.compose.Loading
 import com.todo.app.ui.theme.Primary
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HomeScreen(
     tasks: SnapshotStateList<Tasks>,
-    getTasks: (date: String) -> Unit,
     updateTasks: (it: String, body: TaskUpdateReqModel) -> Unit,
+    onForwardDate: () -> Unit,
+    onMinusDate: () -> Unit,
+    formattedDate: String,
+    date: MutableState<LocalDate>,
+    isLoading: MutableState<Boolean>,
 ) {
-
     val localContext = LocalContext.current
-    val selectedDate = remember { mutableStateOf(LocalDate.now()) }
-    val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-    val formattedDate = remember { mutableStateOf("") }
-    val isLoading = remember { mutableStateOf(true) }
-    val coroutineScope = rememberCoroutineScope()
-
-    formattedDate.value = selectedDate.value.format(dateFormatter)
-
-    LaunchedEffect(formattedDate.value) {
-        coroutineScope.launch {
-            getTasks(formattedDate.value)
-            isLoading.value = false
-        }
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -121,19 +110,20 @@ fun HomeScreen(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.baseline_arrow_back_24),
-                    contentDescription = "back",
+                    contentDescription = "minus_date",
                     modifier = Modifier.clickable(
                         enabled = !isLoading.value
                     ) {
-                        selectedDate.value = selectedDate.value.minusDays(1)
+
+                        onMinusDate();
                         isLoading.value = true
                         tasks.clear()
                     },
                 )
                 Text(
-                    text = formattedDate.value,
+                    text = formattedDate,
                     modifier = Modifier.clickable {
-                        showDatePicker(localContext, selectedDate) {
+                        showDatePicker(localContext, date) {
                             isLoading.value = true
                             tasks.clear()
                         }
@@ -142,11 +132,11 @@ fun HomeScreen(
                 )
                 Icon(
                     painter = painterResource(R.drawable.baseline_arrow_forward_24),
-                    contentDescription = "back",
+                    contentDescription = "forward_date",
                     modifier = Modifier.clickable(
                         enabled = !isLoading.value
                     ) {
-                        selectedDate.value = selectedDate.value.plusDays(1)
+                        onForwardDate();
                         isLoading.value = true
                         tasks.clear()
                     },
@@ -169,6 +159,8 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 20.dp)
+//                    .verticalScroll(rememberScrollState())
+//                    .weight(1f,true)
             ) {
                 Text(
                     text = "Your tasks today are:",
@@ -197,7 +189,9 @@ fun HomeScreen(
                             )
                             Text(
                                 text = item.description!!,
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    textDecoration = if (item.completed!!) TextDecoration.LineThrough else null
+                                ),
                                 modifier = Modifier.padding(start = 10.dp)
                             )
                         }

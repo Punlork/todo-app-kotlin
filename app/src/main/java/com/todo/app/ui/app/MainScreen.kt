@@ -19,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
@@ -45,33 +46,34 @@ import com.todo.app.ui.app.setting.SettingScreen
 import com.todo.app.ui.theme.Primary
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun MainScreen(navigateToLogin: () -> Unit) {
+    val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     val repository = TodoRepository()
     val navController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
     val bottomSheetState =
         rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
-    val focusRequester = remember { FocusRequester() }
 
+    val selectedDate = remember { mutableStateOf(LocalDate.now()) }
+    val formattedDate = remember { mutableStateOf("") }
+    formattedDate.value = selectedDate.value.format(dateFormatter)
+    val isHomeLoading = remember { mutableStateOf(true) }
+
+    val focusRequester = remember { FocusRequester() }
     val tasks = remember { mutableStateListOf<Tasks>() }
 
     val localContext = LocalContext.current
-
     val keyboardController = LocalSoftwareKeyboardController.current
-    LaunchedEffect(bottomSheetState) {
-        snapshotFlow { bottomSheetState.isVisible }.collect {
-            if (it) keyboardController?.show()
-            else keyboardController?.hide()
-        }
-    }
-
 
     fun getTasks(date: String): Unit {
+        isHomeLoading.value = true
         coroutineScope.launch {
             repository.getTasks(
                 context = localContext,
@@ -80,21 +82,38 @@ fun MainScreen(navigateToLogin: () -> Unit) {
                     tasks.addAll(data?.tasks.orEmpty())
                 },
                 onFailure = {
-                    Toast.makeText(localContext, it, Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(localContext, it, Toast.LENGTH_SHORT).show()
                 },
             )
+            isHomeLoading.value = false;
         }
-
     }
+
+    LaunchedEffect(bottomSheetState) {
+        snapshotFlow { bottomSheetState.isVisible }.collect {
+            if (it) keyboardController?.show()
+            else keyboardController?.hide()
+        }
+    }
+
+    LaunchedEffect(selectedDate.value) {
+        println("Get tasks");
+        coroutineScope.launch {
+            getTasks(formattedDate.value)
+        }
+    }
+
 
     ModalBottomSheetLayout(
         sheetContent = {
             BottomSheetContent(
                 focusRequester,
+                selectedDate = selectedDate,
                 closeModal = {
                     coroutineScope.launch {
                         bottomSheetState.hide()
+                        tasks.clear()
+                        getTasks(formattedDate.value);
                     }
                 },
             )
@@ -134,46 +153,53 @@ fun MainScreen(navigateToLogin: () -> Unit) {
                     )
                 }
             },
-            content = { it ->
-                NavHost(
-                    navController = navController,
-                    startDestination = BottomNavItem.Home.screenRoute,
-                    modifier = Modifier.padding(it),
-                    builder = {
-                        composable(BottomNavItem.Home.screenRoute) {
-                            HomeScreen(
-                                tasks,
-                                getTasks = { getTasks(it) },
-                                updateTasks = { id, body ->
-                                    coroutineScope.launch {
-                                        repository.updateTask(context = localContext,
-                                            onSuccess = { result ->
-                                                Toast.makeText(
-                                                    localContext,
-                                                    result?.message,
-                                                    Toast.LENGTH_SHORT,
-                                                ).show()
-                                            },
-                                            onFailure = { message ->
-                                                Toast.makeText(
-                                                    localContext, message, Toast.LENGTH_SHORT
-                                                ).show()
-                                            },
-                                            id = id,
-                                            body = body
-                                        )
-                                    }
-                                },
-                            )
-                        }
-                        composable(BottomNavItem.Setting.screenRoute) {
-                            SettingScreen(
-                                navigateToLogin
-                            )
-                        }
-                    },
-                )
-            },
-        )
+        ) { it ->
+            NavHost(
+                navController = navController,
+                startDestination = BottomNavItem.Home.screenRoute,
+                modifier = Modifier.padding(it),
+            ) {
+                composable(BottomNavItem.Home.screenRoute) {
+                    HomeScreen(
+                        tasks,
+                        onForwardDate = {
+                            selectedDate.value = selectedDate.value.plusDays(1)
+                        },
+                        onMinusDate = {
+                            selectedDate.value = selectedDate.value.minusDays(1)
+                        },
+                        date = selectedDate,
+                        formattedDate = formattedDate.value,
+                        isLoading = isHomeLoading,
+                        updateTasks = { id, body ->
+                            coroutineScope.launch {
+                                repository.updateTask(context = localContext,
+                                    onSuccess = { result ->
+                                        Toast.makeText(
+                                            localContext,
+                                            result?.message,
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                    },
+                                    onFailure = { message ->
+                                        Toast.makeText(
+                                            localContext, message, Toast.LENGTH_SHORT
+                                        ).show()
+                                    },
+                                    id = id,
+                                    body = body
+                                )
+                            }
+                        },
+                    )
+                }
+                composable(BottomNavItem.Setting.screenRoute) {
+                    SettingScreen(navigateToLogin = {
+                        tasks.clear()
+                        navigateToLogin()
+                    })
+                }
+            }
+        }
     }
 }

@@ -72,12 +72,12 @@ private fun showTimePicker(context: Context, selectedTime: MutableState<LocalTim
 @OptIn(ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun BottomSheetContent(focusRequester: FocusRequester, closeModal: () -> Unit) {
+fun BottomSheetContent(focusRequester: FocusRequester, closeModal: () -> Unit, selectedDate: MutableState<LocalDate>) {
     val repository = TodoRepository()
     val task = remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
 
-    val selectedDate = remember { mutableStateOf(LocalDate.now()) }
+
     val selectedTime = remember { mutableStateOf(LocalTime.now()) }
     val selectedDateTime = LocalDateTime.of(selectedDate.value, selectedTime.value)
 
