@@ -173,7 +173,8 @@ fun MainScreen(navigateToLogin: () -> Unit) {
                         isLoading = isHomeLoading,
                         updateTasks = { id, body ->
                             coroutineScope.launch {
-                                repository.updateTask(context = localContext,
+                                repository.updateTask(
+                                    context = localContext,
                                     onSuccess = { result ->
                                         Toast.makeText(
                                             localContext,

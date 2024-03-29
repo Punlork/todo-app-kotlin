@@ -159,8 +159,7 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 20.dp)
-//                    .verticalScroll(rememberScrollState())
-//                    .weight(1f,true)
+
             ) {
                 Text(
                     text = "Your tasks today are:",
@@ -178,7 +177,7 @@ fun HomeScreen(
                             Checkbox(
                                 checked = item.completed!!,
                                 onCheckedChange = {
-                                    val body = TaskUpdateReqModel(true)
+                                    val body = TaskUpdateReqModel(it)
                                     tasks[index] = item.copy(completed = it)
                                     item.Id?.let { id -> updateTasks(id, body) }
                                 },
